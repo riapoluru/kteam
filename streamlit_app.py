@@ -24,55 +24,39 @@ ratings = st.select_slider(
     ],
 )
 
-weight = 0
-# Function to generate dynamic columns based on user input
-def generate_inputs(num_factors):
-    factors = []
-    for i in range(num_factors):
-        factor_name = st.text_input(f"Enter the name for Factor {i+1}", f"Factor {i+1}")
-        score = st.slider(f"{factor_name} Rating (1-10)", 1, 10, 5)
-        weight = st.slider(f"Set weight for {factor_name} (%)", 1, 100, 20)  # Weights in percentage (1-100)
-        factors.append((factor_name, score, weight))
-    return factors
+
 
 # Title
-st.title("Dynamic Design Scoring Tool with Weights")
+st.title("Design Scoring Tool")
 
-# Ask the user for the number of factors
-num_factors = st.number_input("How many factors would you like to rate?", min_value=1, max_value=10, value=3)
-
-# Generate the inputs
-factors = generate_inputs(num_factors)
-
-# Create a DataFrame to store the data
-factor_names = [factor[0] for factor in factors]
-scores = [factor[1] for factor in factors]
-weights = [factor[2] for factor in factors]
-
-# Calculate weighted scores
-weighted_scores = [score * (weight / 100) for score, weight in zip(scores, weights)]
-total_weighted_score = sum(weighted_scores)
-
-#if (sum(weights) != 100):
-   # total_weighted_score == sum of weighted score/total weights
+# Ask user for the number of subsystem options
+num_subsystems = st.number_input("Enter the number of subsystem options:", min_value=1, max_value=10, value=3)
+num_factors = st.number_input("Enter the number of factors for each subsystem:", min_value=1, max_value=10, value=3)
+# Create an editable DataFrame for user input
 
 
+for subsystem in range(1, num_subsystems + 1):
+    st.subheader(f"Subsystem {subsystem}")
 
-# Create a DataFrame to display the results in a table
-df = pd.DataFrame({
-    'Factor': factor_names,
-    'Rating (1-10)': scores,
-    'Weight (%)': weights,
-    'Weighted Score': weighted_scores
-})
+    # Create a new editable DataFrame for each subsystem
+    input_data = {
+        "Factor": [f"Factor {i+1}" for i in range(num_factors)],
+        "Weight (%)": [20] * num_factors,  # Default weight set to 20%
+        "Rating (1-10)": [5] * num_factors,  # Default rating set to 5
+    }
 
-# Display the table
-st.write("### Design Score Summary")
-st.write(df)
+    df = pd.DataFrame(input_data)
 
-# Display the total weighted score
-st.write(f"### Total Weighted Score: {total_weighted_score:.2f}")
+    # Allow user to edit the table for each subsystem with a unique key
+    df = st.data_editor(df, use_container_width=True, key=f"data_editor_{subsystem}")
 
+    # Calculate weighted scores
+    df["Weighted #"] = df["Rating (1-10)"] * (df["Weight (%)"] / 100)
 
+    # Display the formatted table
+    st.write("### Evaluation Table")
+    st.write(df)
 
-
+    # Display the total sum of weighted scores
+    total_weighted_score = df["Weighted #"].sum()
+    st.write(f"### Total Sum of Weighted Scores: {total_weighted_score:.2f}")
